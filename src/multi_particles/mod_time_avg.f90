@@ -48,7 +48,7 @@ contains
 
          mean_h = get_mean_height(interface)
          width  = get_width(interface)
-         current= get_inst_current(hops_left,hops_right,L)
+         current= get_inst_current_interval(hops_left,hops_right,L,interval_steps)
 
          flips_arr = flips
          hops_l    = hops_left

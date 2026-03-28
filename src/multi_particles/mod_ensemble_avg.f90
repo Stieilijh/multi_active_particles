@@ -12,9 +12,9 @@ contains
    subroutine run_ensemble_avg(L,density,puller_fraction,eq_steps,&
       num_runs,&
       volume_exclusion,p_right,&
-      hopping_rate,flipping_rate,filename)
+      hopping_rate,flipping_rate,filename,start_run_id)
 
-      integer(i4),intent(in)::L,eq_steps,num_runs
+      integer(i4),intent(in)::L,eq_steps,num_runs,start_run_id
       logical,intent(in)::volume_exclusion
       real(dp),intent(in)::density,puller_fraction,p_right
       real(dp),intent(in)::hopping_rate,flipping_rate
@@ -26,7 +26,7 @@ contains
 
       real(dp)::mean_h,width,current
 
-      call hdf5_open(filename, L, density, run, num_runs, L)
+      call hdf5_open(filename, L, density, run+start_run_id, num_runs, L)
 
       do run = 1 , num_runs
 

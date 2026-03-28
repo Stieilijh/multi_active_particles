@@ -41,4 +41,10 @@ contains
       real(dp)::current
       current = real(hops_right-hops_left,dp)/real(L,dp)
    end function get_inst_current
+
+   function get_inst_current_interval(hops_left,hops_right,L,interval) result(current)
+      integer(i4),intent(in)::hops_left,hops_right,L,interval
+      real(dp)::current
+      current = real(hops_right-hops_left,dp)/real(L*interval,dp)
+   end function get_inst_current_interval
 end module mod_observables

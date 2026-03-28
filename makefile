@@ -37,3 +37,16 @@ test_observables:
 	src/common/mod_observables.f90 \
 	tests/test_observables.f90 \
 	-o bin/test_observables.out
+
+test_time_avg:
+	h5fc -O3 -march=native -funroll-loops \
+src/common/mod_precision.f90 \
+src/common/mod_rng.f90 \
+src/common/mod_lattice.f90 \
+src/common/mod_interface.f90 \
+src/common/mod_mc_step.f90 \
+src/common/mod_observables.f90 \
+src/common/mod_hdf5.f90 \
+src/multi_particles/mod_time_avg.f90 \
+tests/multi_particles/test_time_avg.f90 \
+-o bin/test_time_avg

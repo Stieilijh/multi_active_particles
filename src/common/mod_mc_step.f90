@@ -7,17 +7,17 @@ contains
 
    subroutine active_step(interface,lattice,L,&
       volume_exclusion,p_right,hopping_rate,flipping_rate,&
-      flips,hops)
+      flips,hops,hops_left,hops_right)
       integer(i4),intent(inout)::interface(:),lattice(:)
       integer(i4),intent(in)::L
       logical,intent(in)::volume_exclusion
       real(dp),intent(in)::p_right,hopping_rate,flipping_rate
-      integer(i4),intent(out)::flips,hops
+      integer(i4),intent(out)::flips,hops,hops_left,hops_right
       integer(i4)::attempts ,i,rand_site,new_site, &
          particle_type,left,right,h,h_right,h_left
       real(dp)::rand_var
       flips = 0_i4
-      hops = 0_i4
+      hops = 0_i4;hops_left=0_i4;hops_right=0_i4
       attempts = int(L/min(hopping_rate,flipping_rate),i4)
 
       do i = 1,attempts
@@ -94,6 +94,11 @@ contains
             lattice(rand_site)=0 ! Vacate
             lattice(new_site) = particle_type ! Move
             hops=hops+1_i4
+            if(new_site==left)then
+               hops_left=hops_left+1_i4
+            else
+               hops_right=hops_right+1_i4
+            end if
          end if
       end do
 

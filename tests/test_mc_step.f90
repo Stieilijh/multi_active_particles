@@ -6,7 +6,7 @@ program test_mc_step
    implicit none
 
    integer(i4),parameter :: L=50
-   integer(i4) :: flips,hops
+   integer(i4) :: flips,hops,h_left,h_right
    integer(i4) :: particles_before, particles_after
    integer(i4) :: max_jump
    integer(i4),allocatable :: interface(:), lattice(:)
@@ -20,7 +20,7 @@ program test_mc_step
 
    particles_before = count(lattice /= 0)
 
-   call active_step(interface,lattice,L,.true.,0.5_dp,1.0_dp,0.1_dp,flips,hops)
+   call active_step(interface,lattice,L,.true.,0.5_dp,1.0_dp,0.1_dp,flips,hops,h_left,h_right)
 
    particles_after = count(lattice /= 0)
 
@@ -46,9 +46,10 @@ program test_mc_step
       stop "FAIL: illegal particle movement"
    end if
 
-   print*, "PASS: Particle Number conserved"
-   print*,"PASS: Valid Lattice"
-   print*,"PASS: All hops are valid"
-   print*,"PASS: All flips are valid"
+   ! -------------TEST 5 : total hops = h_left + h_right -------
+   if(hops/=(h_left+h_right))then
+      stop "FAIL : total hops /= h_left + h_right"
+   end if
+   print*, "PASS: mc_step"
 
 end program test_mc_step

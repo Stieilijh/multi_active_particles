@@ -1,21 +1,22 @@
 module mod_rng
    use mod_precision
-   use omp_lib
+   !use omp_lib
    implicit none
 contains
 
    subroutine seed_rng(base_seed)
       integer(i4),intent(in) :: base_seed
-      integer(i4)::seed_array_size,i,thread_id
+      integer(i4)::seed_array_size,i!,thread_id
       integer(i4),allocatable::seed_array(:)
 
       call random_seed(size = seed_array_size)
       allocate(seed_array(seed_array_size))
 
-      thread_id = omp_get_thread_num()
+      !thread_id = omp_get_thread_num()
 
       do i =1,seed_array_size
-         seed_array(i) = base_seed+37*i+1000*thread_id
+         !seed_array(i) = base_seed+37*i+1000*thread_id
+         seed_array(i) =base_seed+73*i
       end do
 
       call random_seed(put = seed_array)

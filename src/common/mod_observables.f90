@@ -35,4 +35,10 @@ contains
       if(count(lattice/=0_i4)==0) stop "ERROR in GET_PF : NO PARTICLES IN THE LATTICE"
       pf = real(count(lattice==1_i4),dp)/real(count(lattice/=0_i4),dp)
    end function get_puller_fraction
+
+   function get_inst_current(hops_left,hops_right,L) result(current)
+      integer(i4),intent(in)::hops_left,hops_right,L
+      real(dp)::current
+      current = real(hops_right-hops_left,dp)/real(L,dp)
+   end function get_inst_current
 end module mod_observables

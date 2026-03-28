@@ -1,1 +1,1 @@
-# Active Particles simulation
+# Multiple Active Particles simulation

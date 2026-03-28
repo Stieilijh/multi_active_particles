@@ -12,3 +12,11 @@ test_interface:
 	src/common/mod_interface.f90 \
 	tests/test_interface.f90 \
 	-o bin/test_interface.out
+
+test_lattice:
+	gfortran -O3 -fopenmp -Jobj -Iobj \
+	src/common/mod_precision.f90 \
+	src/common/mod_rng.f90 \
+	src/common/mod_lattice.f90 \
+	tests/test_lattice.f90 \
+	-o bin/test_lattice.out

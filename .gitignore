@@ -1,0 +1,8 @@
+data/
+*.h5
+*.dat
+*.out
+*.o
+*.mod
+obj/
+bin/

@@ -30,3 +30,10 @@ test_mc_step:
 	src/common/mod_mc_step.f90 \
 	tests/test_mc_step.f90 \
 	-o bin/test_mc_step.out
+
+test_observables:
+	gfortran -O3 -fopenmp -Jobj -Iobj \
+	src/common/mod_precision.f90 \
+	src/common/mod_observables.f90 \
+	tests/test_observables.f90 \
+	-o bin/test_observables.out

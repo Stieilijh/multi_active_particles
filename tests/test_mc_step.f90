@@ -1,0 +1,54 @@
+program test_mc_step
+   use mod_precision
+   use mod_interface
+   use mod_lattice
+   use mod_mc_step
+   implicit none
+
+   integer(i4),parameter :: L=50
+   integer(i4) :: flips,hops
+   integer(i4) :: particles_before, particles_after
+   integer(i4) :: max_jump
+   integer(i4),allocatable :: interface(:), lattice(:)
+   integer(i4),allocatable :: interface_old(:), lattice_old(:)
+
+   interface = init_interface(L)
+   lattice = init_lattice(L,0.4_dp,0.5_dp)
+
+   interface_old = interface
+   lattice_old = lattice
+
+   particles_before = count(lattice /= 0)
+
+   call active_step(interface,lattice,L,.true.,0.5_dp,1.0_dp,0.1_dp,flips,hops)
+
+   particles_after = count(lattice /= 0)
+
+   ! ---------- TEST 1: particle conservation ----------
+   if (particles_before /= particles_after) then
+      stop "FAIL: particle number not conserved"
+   end if
+
+   ! ---------- TEST 2: valid lattice values ----------
+   if (any(lattice /= -1 .and. lattice /= 0 .and. lattice /= 1)) then
+      stop "FAIL: invalid lattice value"
+   end if
+
+   ! ---------- TEST 3: interface jump only +-2 ----------
+   max_jump = maxval(abs(interface - interface_old))
+   if (max_jump > 2) then
+      stop "FAIL: interface jump too large"
+   end if
+
+   ! ---------- TEST 4: only local particle movement ----------
+   ! crude check: number of changed sites <= 2*hops
+   if (count(lattice /= lattice_old) > 2*hops) then
+      stop "FAIL: illegal particle movement"
+   end if
+
+   print*, "PASS: Particle Number conserved"
+   print*,"PASS: Valid Lattice"
+   print*,"PASS: All hops are valid"
+   print*,"PASS: All flips are valid"
+
+end program test_mc_step

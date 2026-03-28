@@ -1,15 +1,14 @@
-program test_time_avg
+program test_ensemble_avg
 
    use mod_precision
-   use mod_time_avg
+   use mod_ensemble_avg
    implicit none
 
    integer(i4) :: L
    real(dp)    :: density, puller_fraction
-   integer(i4) :: eq_steps, interval_steps, num_samples
+   integer(i4) :: eq_steps, num_runs
    logical     :: volume_exclusion
    real(dp)    :: p_right, hopping_rate, flipping_rate
-   integer(i4) :: run_id
    character(len=256) :: filename
 
    L = 32
@@ -17,8 +16,7 @@ program test_time_avg
    puller_fraction = 0.5_dp
 
    eq_steps = 20
-   interval_steps = 5
-   num_samples = 10
+   num_runs = 5
 
    volume_exclusion = .true.
    p_right = 0.5_dp
@@ -26,16 +24,15 @@ program test_time_avg
    hopping_rate = 0.0_dp
    flipping_rate = 0.0_dp
 
-   run_id = 0
    filename = "data/multi_particles/all_runs.h5"
 
-   call run_time_avg( &
+   call run_ensemble_avg( &
       L, density, puller_fraction, &
-      eq_steps, interval_steps, num_samples, &
+      eq_steps, num_runs, &
       volume_exclusion, p_right, &
       hopping_rate, flipping_rate, &
-      filename, run_id)
+      filename)
 
-   print *, "time avg test done"
+   print *, "ensemble avg test done"
 
 end program

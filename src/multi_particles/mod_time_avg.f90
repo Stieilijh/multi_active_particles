@@ -11,13 +11,14 @@ contains
 
    subroutine run_time_avg (L,density,puller_fraction,eq_steps,&
       interval_steps,num_samples,&
-      volume_exclusion,p_right,hopping_rate,flipping_rate,filename)
-      integer(i4),intent(in)::L,eq_steps,interval_steps,num_samples
+      volume_exclusion,p_right,hopping_rate,flipping_rate,filename,run_id)
+      integer(i4),intent(in)::L,eq_steps,interval_steps,num_samples,run_id
       logical,intent(in)::volume_exclusion
       real(dp),intent(in)::density,puller_fraction,p_right,&
          hopping_rate,flipping_rate
       integer(i4),allocatable::lattice(:),interface(:)
       integer(i4)::flips,hops,hops_left,hops_right,i,j
+
 
       real(dp) :: mean_h, width, current
       integer(i4) :: flips_arr, hops_l, hops_r
@@ -31,7 +32,7 @@ contains
             volume_exclusion,p_right,hopping_rate,flipping_rate,&
             flips,hops,hops_left,hops_right)
       end do
-      call hdf5_open(filename, num_samples, L)
+      call hdf5_open(filename, L, density, run_id, num_samples, L)
       !------START TAKING SAMPLES
       do i = 1 , num_samples
 

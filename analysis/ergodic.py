@@ -1,5 +1,6 @@
 import h5py
 import numpy as np
+import matplotlib.pyplot as plt
 
 FILE = "data/multi_particles/ergodic_test.h5"
 
@@ -9,12 +10,16 @@ def dataset_mean(arr):
 
 
 def percent(a, b):
+    if a == 0 and b == 0:
+        return 0.0
     return abs(a - b) / max(abs(a), abs(b)) * 100
 
 
 with h5py.File(FILE, "r") as f:
 
     for L in f.keys():
+        L_value = int(L.split("_")[1])
+
         for density in f[L].keys():
 
             group = f[L][density]
@@ -22,14 +27,28 @@ with h5py.File(FILE, "r") as f:
             # ---------- time average ----------
             time = group["run_0"]
 
-            w_time = dataset_mean(time["width"][:])
-            c_time = dataset_mean(time["current"][:])
-            f_time = dataset_mean(time["flips"][:])
+            width_time = dataset_mean(time["width"][:])
+            flips_time = dataset_mean(time["flips"][:])
             hl_time = dataset_mean(time["hops_left"][:])
             hr_time = dataset_mean(time["hops_right"][:])
 
+            # instantaneous current (old)
+            curr_time_inst = dataset_mean(time["current"][:])
+
+            # cumulative current (correct)
+            drift_time = np.sum(time["hops_right"][:] - time["hops_left"][:])
+            total_time_steps = len(time["hops_left"])
+            curr_time_cum = drift_time / (L_value * total_time_steps)
+
             # ---------- ensemble ----------
-            w_e, c_e, f_e, hl_e, hr_e = [], [], [], [], []
+            width_e = []
+            flips_e = []
+            hl_e = []
+            hr_e = []
+            curr_e_inst = []
+
+            drift_ens_total = 0
+            steps_ens_total = 0
 
             for run in group.keys():
                 if run == "run_0":
@@ -37,38 +56,41 @@ with h5py.File(FILE, "r") as f:
 
                 g = group[run]
 
-                w_e.append(dataset_mean(g["width"][:]))
-                c_e.append(dataset_mean(g["current"][:]))
-                f_e.append(dataset_mean(g["flips"][:]))
+                width_e.append(dataset_mean(g["width"][:]))
+                flips_e.append(dataset_mean(g["flips"][:]))
                 hl_e.append(dataset_mean(g["hops_left"][:]))
                 hr_e.append(dataset_mean(g["hops_right"][:]))
+                curr_e_inst.append(dataset_mean(g["current"][:]))
 
-            w_ens = np.mean(w_e)
-            c_ens = np.mean(c_e)
-            f_ens = np.mean(f_e)
+                drift_ens_total += np.sum(g["hops_right"]
+                                          [:] - g["hops_left"][:])
+                steps_ens_total += len(g["hops_left"])
+
+            width_ens = np.mean(width_e)
+            flips_ens = np.mean(flips_e)
             hl_ens = np.mean(hl_e)
             hr_ens = np.mean(hr_e)
+            curr_ens_inst = np.mean(curr_e_inst)
 
+            curr_ens_cum = drift_ens_total / (L_value * steps_ens_total)
+
+            drift_ens = hr_ens - hl_ens
+
+            # ---------- PRINT ----------
             print("\n==============================")
             print(f"{L} {density}")
             print("==============================")
 
             print("WIDTH")
-            print(" time avg    :", w_time)
-            print(" ensemble    :", w_ens)
-            print(" diff (%)    :", percent(w_time, w_ens))
-            print()
-
-            print("CURRENT")
-            print(" time avg    :", c_time)
-            print(" ensemble    :", c_ens)
-            print(" diff (%)    :", percent(c_time, c_ens))
+            print(" time avg    :", width_time)
+            print(" ensemble    :", width_ens)
+            print(" diff (%)    :", percent(width_time, width_ens))
             print()
 
             print("FLIPS")
-            print(" time avg    :", f_time)
-            print(" ensemble    :", f_ens)
-            print(" diff (%)    :", percent(f_time, f_ens))
+            print(" time avg    :", flips_time)
+            print(" ensemble    :", flips_ens)
+            print(" diff (%)    :", percent(flips_time, flips_ens))
             print()
 
             print("HOPS LEFT")
@@ -83,11 +105,33 @@ with h5py.File(FILE, "r") as f:
             print(" diff (%)    :", percent(hr_time, hr_ens))
             print()
 
-            # helpful diagnostic
-            drift_time = hr_time - hl_time
-            drift_ens = hr_ens - hl_ens
-
             print("DRIFT (hopsR - hopsL)")
-            print(" time avg    :", drift_time)
+            print(" time avg    :", drift_time / total_time_steps)
             print(" ensemble    :", drift_ens)
-            print(" diff (%)    :", percent(drift_time, drift_ens))
+            print(" diff (%)    :", percent(
+                drift_time / total_time_steps, drift_ens))
+            print()
+
+            print("CURRENT (instantaneous — noisy)")
+            print(" time avg    :", curr_time_inst)
+            print(" ensemble    :", curr_ens_inst)
+            print(" diff (%)    :", percent(curr_time_inst, curr_ens_inst))
+            print()
+
+            print("CURRENT (cumulative — correct)")
+            print(" time avg    :", curr_time_cum)
+            print(" ensemble    :", curr_ens_cum)
+            print(" diff (%)    :", percent(curr_time_cum, curr_ens_cum))
+            print()
+
+            # ---------- PLOT mean height vs time ----------
+            height = time["mean"][:]
+
+            plt.figure()
+            plt.plot(height)
+            plt.xlabel("Sample index")
+            plt.ylabel("Mean height")
+            plt.title(f"Mean height vs time — {L} {density}")
+            plt.tight_layout()
+
+plt.show()

@@ -24,14 +24,14 @@ program test_ensemble_avg
    hopping_rate = 0.0_dp
    flipping_rate = 0.0_dp
 
-   filename = "data/multi_particles/all_runs.h5"
+   filename = "data/multi_particles/test_ensemble.h5"
 
    call run_ensemble_avg( &
       L, density, puller_fraction, &
       eq_steps, num_runs, &
       volume_exclusion, p_right, &
       hopping_rate, flipping_rate, &
-      filename)
+      filename,1)
 
    print *, "ensemble avg test done"
 

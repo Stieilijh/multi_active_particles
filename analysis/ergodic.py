@@ -112,13 +112,13 @@ with h5py.File(FILE, "r") as f:
                 drift_time / total_time_steps, drift_ens))
             print()
 
-            print("CURRENT (instantaneous — noisy)")
+            print("CURRENT (instantaneous)")
             print(" time avg    :", curr_time_inst)
             print(" ensemble    :", curr_ens_inst)
             print(" diff (%)    :", percent(curr_time_inst, curr_ens_inst))
             print()
 
-            print("CURRENT (cumulative — correct)")
+            print("CURRENT (cumulative)")
             print(" time avg    :", curr_time_cum)
             print(" ensemble    :", curr_ens_cum)
             print(" diff (%)    :", percent(curr_time_cum, curr_ens_cum))

@@ -27,7 +27,7 @@ program test_time_avg
    flipping_rate = 0.0_dp
 
    run_id = 0
-   filename = "data/multi_particles/all_runs.h5"
+   filename = "data/multi_particles/test_time_avg.h5"
 
    call run_time_avg( &
       L, density, puller_fraction, &

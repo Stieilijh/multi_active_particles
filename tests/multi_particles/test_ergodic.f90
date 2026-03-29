@@ -31,7 +31,7 @@ program test_ergodic
    puller_fraction = 1.0_dp
 
    eq_steps = 2000
-   interval_steps = 50
+   interval_steps = 100
    num_samples = 5000
    num_runs = 5000
 

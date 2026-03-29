@@ -81,5 +81,19 @@ src/multi_particles/mod_ensemble_avg.f90 \
 tests/multi_particles/test_ergodic.f90 \
 -o bin/test_ergodic && mv *.o obj/
 
+run_density_sweep:
+	mkdir -p obj bin
+	h5fc -O3 -march=native -funroll-loops -J obj -I obj \
+src/common/mod_precision.f90 \
+src/common/mod_rng.f90 \
+src/common/mod_lattice.f90 \
+src/common/mod_interface.f90 \
+src/common/mod_mc_step.f90 \
+src/common/mod_observables.f90 \
+src/common/mod_hdf5.f90 \
+src/multi_particles/mod_time_avg.f90 \
+tests/multi_particles/run_density_sweep.f90 \
+-o bin/run_density_sweep && mv *.o obj/
+
 clean:
 	rm -rf obj/*.mod obj/*.o

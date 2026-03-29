@@ -25,27 +25,26 @@ contains
       integer(i4)::run,i
 
       real(dp)::mean_h,width,current
-
-      call hdf5_open(filename, L, density, run+start_run_id, num_runs, L)
-
       do run = 1 , num_runs
 
          lattice   = init_lattice(L,density,puller_fraction)
          interface = init_interface(L)
 
-         ! equilibrate
+         ! bring to steady state
          do i = 1 , eq_steps
             call active_step(interface,lattice,L,&
                volume_exclusion,p_right,hopping_rate,flipping_rate,&
                flips,hops,hops_left,hops_right)
          end do
 
+         call hdf5_open(filename, L, density, run+start_run_id, 1, L, &
+            eq_steps, 0)
          ! measure once
          mean_h = get_mean_height(interface)
          width  = get_width(interface)
          current= get_inst_current(hops_left,hops_right,L)
 
-         call hdf5_write_sample(run, mean_h, width, current, &
+         call hdf5_write_sample(1, mean_h, width, current, &
             flips, hops_left, hops_right, &
             interface)
 

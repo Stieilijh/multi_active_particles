@@ -32,7 +32,6 @@ contains
       logical :: exists
 
       call h5lexists_f(parent,trim(name),exists,error)
-      call check_error(error,"group exists")
 
       if(exists) then
          call h5gopen_f(parent,trim(name),gid,error)
@@ -40,7 +39,7 @@ contains
          call h5gcreate_f(parent,trim(name),gid,error)
       end if
 
-      call check_error(error,"open group "//trim(name))
+      call check_error(error,"group "//trim(name))
    end subroutine
 
 !========================================================
@@ -60,7 +59,6 @@ contains
       integer(hsize_t) :: chunk(size(dims))
 
       call h5screate_simple_f(rank,dims,space,error)
-      call check_error(error,"space")
 
       call h5pcreate_f(H5P_DATASET_CREATE_F,dcpl,error)
 
@@ -92,7 +90,6 @@ contains
       integer(hsize_t) :: chunk(size(dims))
 
       call h5screate_simple_f(rank,dims,space,error)
-      call check_error(error,"space")
 
       call h5pcreate_f(H5P_DATASET_CREATE_F,dcpl,error)
 
@@ -110,7 +107,7 @@ contains
    end subroutine
 
 !========================================================
-! attributes (metadata)
+! attribute writers
 !========================================================
 
    subroutine write_int_attr(loc,name,value)
@@ -155,13 +152,43 @@ contains
 
 !========================================================
 
+   subroutine write_logical_attr(loc,name,value)
+
+      integer(hid_t),intent(in) :: loc
+      character(*),intent(in) :: name
+      logical,intent(in) :: value
+
+      integer :: error
+      integer(hid_t) :: space,attr
+      integer(hsize_t) :: dims(1)
+      integer :: ivalue
+
+      ivalue = merge(1,0,value)
+
+      dims=[1]
+
+      call h5screate_simple_f(1,dims,space,error)
+      call h5acreate_f(loc,name,H5T_NATIVE_INTEGER,space,attr,error)
+      call h5awrite_f(attr,H5T_NATIVE_INTEGER,ivalue,dims,error)
+
+      call h5aclose_f(attr,error)
+      call h5sclose_f(space,error)
+
+   end subroutine
+
+!========================================================
+
    subroutine hdf5_open(filename,L,density,run_id,n_samples,Lsize, &
-      eq_steps,interval_steps)
+      eq_steps,interval_steps, &
+      p_right,hopping_rate,flipping_rate, &
+      volume_exclusion,puller_fraction)
 
       character(*),intent(in) :: filename
       integer(i4),intent(in) :: L,run_id,n_samples,Lsize
       integer(i4),intent(in) :: eq_steps,interval_steps
       real(dp),intent(in) :: density
+      real(dp),intent(in) :: p_right,hopping_rate,flipping_rate,puller_fraction
+      logical,intent(in) :: volume_exclusion
 
       integer :: error
       character(len=64) :: name
@@ -187,14 +214,21 @@ contains
       write(name,'("run_",I0)') run_id
       call open_or_create_group(group_density,name,group_run)
 
-! store metadata
+! metadata
       call write_int_attr(group_run,"L",L)
       call write_real_attr(group_run,"density",density)
       call write_int_attr(group_run,"eq_steps",eq_steps)
       call write_int_attr(group_run,"interval_steps",interval_steps)
       call write_int_attr(group_run,"num_samples",n_samples)
 
-! create datasets
+      call write_real_attr(group_run,"p_right",p_right)
+      call write_real_attr(group_run,"hopping_rate",hopping_rate)
+      call write_real_attr(group_run,"flipping_rate",flipping_rate)
+      call write_real_attr(group_run,"puller_fraction",puller_fraction)
+
+      call write_logical_attr(group_run,"volume_exclusion",volume_exclusion)
+
+! datasets
       dims1=[n_samples]
       dims2=[n_samples,Lsize]
 
@@ -210,6 +244,8 @@ contains
 
    end subroutine
 
+!========================================================
+! writing routines (unchanged)
 !========================================================
 
    subroutine write_scalar_real(dset,i,value)
@@ -237,8 +273,6 @@ contains
       call h5sclose_f(memspace,error)
    end subroutine
 
-!========================================================
-
    subroutine write_scalar_int(dset,i,value)
       integer(hid_t),intent(in) :: dset
       integer(i4),intent(in) :: i,value
@@ -263,8 +297,6 @@ contains
       call h5sclose_f(memspace,error)
    end subroutine
 
-!========================================================
-
    subroutine write_row(dset,i,row)
       integer(hid_t),intent(in) :: dset
       integer(i4),intent(in) :: i
@@ -288,8 +320,6 @@ contains
       call h5sclose_f(memspace,error)
    end subroutine
 
-!========================================================
-
    subroutine hdf5_write_sample(i,mean,width,current, &
       flips,hops_left,hops_right,interface)
 
@@ -309,8 +339,6 @@ contains
       call write_row(d_interface,i,interface)
 
    end subroutine
-
-!========================================================
 
    subroutine hdf5_close()
 

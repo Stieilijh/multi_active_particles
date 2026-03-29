@@ -38,7 +38,9 @@ contains
          end do
 
          call hdf5_open(filename, L, density, run+start_run_id, 1, L, &
-            eq_steps, 0)
+            eq_steps, 0, &
+            p_right, hopping_rate, flipping_rate, &
+            volume_exclusion, puller_fraction)
          ! measure once
          mean_h = get_mean_height(interface)
          width  = get_width(interface)

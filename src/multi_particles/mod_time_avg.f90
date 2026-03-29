@@ -33,7 +33,9 @@ contains
             flips,hops,hops_left,hops_right)
       end do
       call hdf5_open(filename, L, density, run_id, num_samples, L, &
-         eq_steps, interval_steps)
+         eq_steps, interval_steps, &
+         p_right, hopping_rate, flipping_rate, &
+         volume_exclusion, puller_fraction)
       !------START TAKING SAMPLES
       do i = 1 , num_samples
 

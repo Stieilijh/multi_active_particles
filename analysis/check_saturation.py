@@ -2,16 +2,13 @@ import numpy as np
 import h5py
 import matplotlib.pyplot as plt
 
-filename = "data/multi_particles/density_sweep_time_avg.h5"
+filename = "data/multi_particles/density_sweep_time_avg_trial2.h5"
 
 plt.figure(figsize=(7, 5))
 
 with h5py.File(filename, "r") as f:
 
     for L in sorted(f.keys(), key=lambda x: int(x.split("_")[1])):
-
-        if not L == "L_128":
-            continue
         densities = []
         width_std = []
         width_mean = []

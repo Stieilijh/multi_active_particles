@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 
-FILE = "data/multi_particles/density_sweep_time_avg.h5"
+FILE = "data/multi_particles/L_1024_density_sweep.h5"
 
 
 def get_density_value(d):
@@ -17,32 +17,43 @@ with h5py.File(FILE, "r") as f:
 
     for L in sorted(f.keys(), key=get_L_value):
 
+        L_val = get_L_value(L)
+
         densities = []
-        width_avg = []
+        width_rel = []
         flips_avg = []
         hopsL_avg = []
         hopsR_avg = []
 
         for density in sorted(f[L].keys(), key=get_density_value):
 
-            # take the first run available
             run_key = list(f[L][density].keys())[0]
             run = f[L][density][run_key]
 
             densities.append(get_density_value(density))
-            width_avg.append(np.mean(run["width"][:]))
+
+            # ---- width mean ----
+            width_mean = np.mean(run["width"][:])
+
+            # ---- mean height ----
+            interface = run["interface"][:]   # (L , time)
+            mean_height = np.mean(interface)
+
+            # ---- relative width ----
+            width_rel.append(width_mean)
+
             flips_avg.append(np.mean(run["flips"][:]))
             hopsL_avg.append(np.mean(run["hops_left"][:]))
             hopsR_avg.append(np.mean(run["hops_right"][:]))
 
         densities = np.array(densities)
 
-        # -------- WIDTH vs DENSITY --------
+        # -------- RELATIVE WIDTH vs DENSITY --------
         plt.figure()
-        plt.plot(densities, width_avg, marker='o')
+        plt.plot(densities, width_rel, marker='o')
         plt.xlabel("Density")
-        plt.ylabel("Average Width")
-        plt.title(f"Width vs Density (L={get_L_value(L)})")
+        plt.ylabel("Relative Width (W / ⟨h⟩)")
+        plt.title(f"Relative Width vs Density (L={L_val})")
         plt.grid()
 
         # -------- OTHER OBSERVABLES --------
@@ -53,7 +64,7 @@ with h5py.File(FILE, "r") as f:
 
         plt.xlabel("Density")
         plt.ylabel("Average value")
-        plt.title(f"Flips / Hops vs Density (L={get_L_value(L)})")
+        plt.title(f"Flips / Hops vs Density (L={L_val})")
         plt.legend()
         plt.grid()
 

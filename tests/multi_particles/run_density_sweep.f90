@@ -2,11 +2,12 @@ program run_density_sweep
 
    use mod_precision
    use mod_time_avg
+   use omp_lib
    implicit none
 
    ! -------- simulation parameters --------
-   integer(i4), parameter :: nL = 5
-   integer(i4), dimension(nL) :: L_list = [128,256,512,1024,2048]
+   integer(i4), parameter :: nL = 1
+   integer(i4), dimension(nL) :: L_list = [128]
 
    integer(i4), parameter :: ndens = 20
    real(dp) :: densities(ndens)
@@ -30,9 +31,9 @@ program run_density_sweep
    character(len=256) :: filename
 
    ! ---------- values ----------
-   eq_steps       = 10000
-   interval_steps = 300
-   num_samples    = 1800
+   eq_steps       = 1000
+   interval_steps = 50
+   num_samples    = 500
 
    puller_fraction = 1.0_dp
    p_right         = 0.5_dp
@@ -40,9 +41,10 @@ program run_density_sweep
    flipping_rate   = 0.1_dp
    volume_exclusion = .true.
 
-   filename = "data/multi_particles/density_sweep_time_avg.h5"
-
+   filename = "data/multi_particles/density_sweep_test.h5"
+   call seed_rng(1234)
    ! ---------- density sweep ----------
+
    do id = 1, ndens
       densities(id) = real(0.05_dp * real(id,dp),dp)
    end do
@@ -59,7 +61,6 @@ program run_density_sweep
       print *, "===================================="
       print *, "Running L =", L_list(iL)
       print *, "===================================="
-
       do id = 1, ndens
 
          density = densities(id)

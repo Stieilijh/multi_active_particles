@@ -6,3 +6,4 @@ data/
 *.mod
 obj/
 bin/
+graphs/

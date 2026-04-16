@@ -14,10 +14,11 @@ contains
       volume_exclusion,p_right,hopping_rate,flipping_rate,filename,run_id)
       integer(i4),intent(in)::L,eq_steps,interval_steps,num_samples,run_id
       logical,intent(in)::volume_exclusion
+      logical::sample
       real(dp),intent(in)::density,puller_fraction,p_right,&
          hopping_rate,flipping_rate
-      integer(i4),allocatable::lattice(:),interface(:)
-      integer(i4)::flips,hops,hops_left,hops_right,i,j
+      integer(i4),allocatable::lattice(:),interface(:),j_left(:),j_right(:)
+      integer(i4)::flips,hops,hops_left,hops_right,i,j,ok
 
 
       real(dp) :: mean_h, width, current
@@ -26,11 +27,15 @@ contains
       !-------INITIALISATION-------
       lattice = init_lattice(L,density,puller_fraction)
       interface = init_interface(L)
+      allocate(j_left(L),j_right(L),stat=ok)
       !----BRING TO STEADY STATE------
+      sample  = .false.
+      j_left = 0
+      j_right = 0
       do i = 1,eq_steps
          call active_step(interface,lattice,L,&
             volume_exclusion,p_right,hopping_rate,flipping_rate,&
-            flips,hops,hops_left,hops_right)
+            flips,hops,hops_left,hops_right,sample,j_left,j_right)
       end do
       call hdf5_open(filename, L, density, run_id, num_samples, L, &
          eq_steps, interval_steps, &
@@ -43,10 +48,14 @@ contains
          hops_right = 0
          flips      = 0
 
+         j_left = 0
+         j_right = 0
+
          do j =1, interval_steps
+            sample = (j==interval_steps)
             call active_step(interface,lattice,L,&
                volume_exclusion,p_right,hopping_rate,flipping_rate,&
-               flips,hops,hops_left,hops_right)
+               flips,hops,hops_left,hops_right,sample,j_left,j_right)
          end do
 
          mean_h = get_mean_height(interface)
@@ -58,7 +67,7 @@ contains
          hops_r    = hops_right
          call hdf5_write_sample(i, mean_h, width, current, &
             flips, hops_left, hops_right, &
-            interface)
+            interface,lattice,j_left,j_right)
       end do
       call hdf5_close()
    end subroutine run_time_avg

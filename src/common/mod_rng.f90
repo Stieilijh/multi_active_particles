@@ -16,7 +16,7 @@ contains
 
       do i =1,seed_array_size
          !seed_array(i) = base_seed+37*i+1000*thread_id
-         seed_array(i) =base_seed+73*i
+         seed_array(i) = base_seed+37*i
       end do
 
       call random_seed(put = seed_array)

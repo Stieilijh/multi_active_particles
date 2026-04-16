@@ -8,7 +8,7 @@ module mod_hdf5
 
    integer(hid_t) :: d_mean, d_width, d_current
    integer(hid_t) :: d_flips, d_hops_l, d_hops_r
-   integer(hid_t) :: d_interface
+   integer(hid_t) :: d_interface,d_lattice,d_j_left,d_j_right
 
 contains
 
@@ -241,6 +241,9 @@ contains
       call create_dataset_int(group_run,"hops_right",dims1,1,d_hops_r)
 
       call create_dataset_int(group_run,"interface",dims2,2,d_interface)
+      call create_dataset_int(group_run,"lattice",dims2,2,d_lattice)
+      call create_dataset_int(group_run,"J (Left) ",dims2,2,d_j_left)
+      call create_dataset_int(group_run,"J (Right)",dims2,2,d_j_right)
 
    end subroutine
 
@@ -321,12 +324,12 @@ contains
    end subroutine
 
    subroutine hdf5_write_sample(i,mean,width,current, &
-      flips,hops_left,hops_right,interface)
+      flips,hops_left,hops_right,interface,lattice,j_left,j_right)
 
       integer(i4),intent(in)::i
       real(dp),intent(in)::mean,width,current
       integer(i4),intent(in)::flips,hops_left,hops_right
-      integer(i4),intent(in)::interface(:)
+      integer(i4),intent(in)::interface(:),lattice(:),j_left(:),j_right(:)
 
       call write_scalar_real(d_mean,i,mean)
       call write_scalar_real(d_width,i,width)
@@ -337,6 +340,9 @@ contains
       call write_scalar_int(d_hops_r,i,hops_right)
 
       call write_row(d_interface,i,interface)
+      call write_row(d_lattice,i,lattice)
+      call write_row(d_j_left,i,j_left)
+      call write_row(d_j_right,i,j_right)
 
    end subroutine
 
@@ -351,6 +357,9 @@ contains
       call h5dclose_f(d_hops_l,error)
       call h5dclose_f(d_hops_r,error)
       call h5dclose_f(d_interface,error)
+      call h5dclose_f(d_lattice,error)
+      call h5dclose_f(d_j_left,error)
+      call h5dclose_f(d_J_right,error)
 
       call h5gclose_f(group_run,error)
       call h5gclose_f(group_density,error)

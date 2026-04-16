@@ -248,7 +248,7 @@ contains
    end subroutine
 
 !========================================================
-! writing routines (unchanged)
+! writing routines
 !========================================================
 
    subroutine write_scalar_real(dset,i,value)

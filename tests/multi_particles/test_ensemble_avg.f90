@@ -24,7 +24,7 @@ program test_ensemble_avg
    hopping_rate = 0.0_dp
    flipping_rate = 0.0_dp
 
-   filename = "data/multi_particles/test_ensemble.h5"
+   filename = "data/multi_particles/tests/test_ensemble.h5"
 
    call run_ensemble_avg( &
       L, density, puller_fraction, &

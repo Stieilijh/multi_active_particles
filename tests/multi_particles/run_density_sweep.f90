@@ -41,7 +41,7 @@ program run_density_sweep
    flipping_rate   = 0.1_dp
    volume_exclusion = .true.
 
-   filename = "data/multi_particles/density_sweep_test.h5"
+   filename = "data/multi_particles/tests/density_sweep_test.h5"
    call seed_rng(1234)
    ! ---------- density sweep ----------
 

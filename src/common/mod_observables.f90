@@ -4,47 +4,62 @@ module mod_observables
 contains
 
    function get_mean_height(interface) result(mean_height)
-      integer(i4),intent(in)::interface(:)
-      real(dp)::mean_height
-      if(size(interface)==0) stop "ERROR in GET_HEIGHT : INTERFACE SIZE IS 0"
-      mean_height= real(sum(interface),dp)/real(size(interface),dp)
+      integer(i8), intent(in) :: interface(:)
+      real(dp) :: mean_height
+
+      mean_height = real(sum(interface), dp) / real(size(interface), dp)
    end function get_mean_height
 
 
    function get_width(interface) result(width)
-      integer(i4),intent(in)::interface(:)
-      real(dp)::width,mean
-      if(size(interface)==0) stop "ERROR in GET_WIDTH : INTERFACE SIZE IS 0"
-      mean = real(sum(interface),dp)/real(size(interface),dp)
-      width = sqrt(sum(real(interface,dp)*real(interface,dp))/real(size(interface),dp) - mean*mean)
+      integer(i8), intent(in) :: interface(:)
+      real(dp) :: width, mean
+      real(dp), allocatable :: diff(:)
+
+      mean = real(sum(interface), dp) / real(size(interface), dp)
+
+      allocate(diff(size(interface)))
+      diff = real(interface, dp) - mean
+
+      width = sqrt(sum(diff*diff) / real(size(interface), dp))
+
+      deallocate(diff)
    end function get_width
 
 
    function get_density(lattice) result(density)
-      integer(i4),intent(in)::lattice(:)
-      real(dp)::density
-      if(size(lattice)==0) stop "ERROR in GET_DENSITY : LATTICE SIZE IS 0"
-      density =  real(count(lattice/=0_i4),dp)/real(size(lattice),dp)
+      integer(i4), intent(in) :: lattice(:)
+      real(dp) :: density
+
+      density = real(count(lattice /= 0_i4), dp) / real(size(lattice), dp)
    end function get_density
 
 
    function get_puller_fraction(lattice) result(pf)
-      integer(i4),intent(in)::lattice(:)
-      real(dp)::pf
-      if(size(lattice)==0) stop "ERROR in GET_PF : LATTICE SIZE IS 0"
-      if(count(lattice/=0_i4)==0) stop "ERROR in GET_PF : NO PARTICLES IN THE LATTICE"
-      pf = real(count(lattice==1_i4),dp)/real(count(lattice/=0_i4),dp)
+      integer(i4), intent(in) :: lattice(:)
+      real(dp) :: pf
+
+      pf = real(count(lattice == 1_i4), dp) / &
+         real(count(lattice /= 0_i4), dp)
    end function get_puller_fraction
 
-   function get_inst_current(hops_left,hops_right,L) result(current)
-      integer(i4),intent(in)::hops_left,hops_right,L
-      real(dp)::current
-      current = real(hops_right-hops_left,dp)/real(L,dp)
+
+   function get_inst_current(hops_left, hops_right, L) result(current)
+      integer(i8), intent(in) :: hops_left, hops_right
+      integer(i4), intent(in) :: L
+      real(dp) :: current
+
+      current = real(hops_right - hops_left, dp) / real(L, dp)
    end function get_inst_current
 
-   function get_inst_current_interval(hops_left,hops_right,L,interval) result(current)
-      integer(i4),intent(in)::hops_left,hops_right,L,interval
-      real(dp)::current
-      current = real(hops_right-hops_left,dp)/real(L*interval,dp)
+
+   function get_inst_current_interval(hops_left, hops_right, L, interval) result(current)
+      integer(i8), intent(in) :: hops_left, hops_right
+      integer(i4), intent(in) :: L
+      integer(i4), intent(in) :: interval
+      real(dp) :: current
+
+      current = real(hops_right - hops_left, dp) / real(L * interval, dp)
    end function get_inst_current_interval
+
 end module mod_observables

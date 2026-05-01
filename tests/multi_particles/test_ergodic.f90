@@ -43,7 +43,7 @@ program test_ergodic
    time_run_id = 0
    ensemble_start_id = 1
 
-   filename = "data/multi_particles/ergodic_test.h5"
+   filename = "data/multi_particles/tests/ergodic_test.h5"
 
    ! ---------------- RUN ----------------
    print *, "Running time average..."

@@ -10,7 +10,7 @@ program run_parallel_density_sweep
 
    ! -------- simulation parameters --------
    integer(i4), parameter :: nL = 1!5
-   integer(i4), dimension(nL) :: L_list = [1024]
+   integer(i4), dimension(nL) :: L_list = [512]
    !integer(i4), dimension(nL) :: L_list = [128,256,512,1024,2048]
 
    integer(i4), parameter :: ndens = 20
@@ -54,8 +54,8 @@ program run_parallel_density_sweep
    num_samples    = 10000
    puller_fraction = 1.0_dp
    p_right         = 0.5_dp
-   hopping_rate    = 1.0_dp
-   flipping_rate   = 0.1_dp
+   hopping_rate    = 0.1_dp
+   flipping_rate   = 1.0_dp
    volume_exclusion = .true.
 
 !-----------------------------------
@@ -79,7 +79,7 @@ program run_parallel_density_sweep
       density = densities(id)
 
 
-      write(filename,'("data/multi_particles/tests_parallel/L_",I0,"_d_",I2.2,".h5")') &
+      write(filename,'("data/multi_particles/volume_exclusion/puller_fraction_1_0/hop_1_flip_0_1/L_1024/dens/L_",I0,"_d_",I2.2,".h5")') &
          L, id
 
       print *, "rank", rank, " L=", L, " density=", density

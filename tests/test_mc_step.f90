@@ -6,11 +6,11 @@ program test_mc_step
    implicit none
 
    integer(i4),parameter :: L=50
-   integer(i8) :: flips,hops,h_left,h_right
+   integer(i4) :: flips,hops,h_left,h_right
    integer(i4) :: particles_before, particles_after
    integer(i4) :: max_jump
-   integer(i8),allocatable :: interface(:), interface_old(:),j_left(:),j_right(:)
-   integer(i4),allocatable :: lattice(:), lattice_old(:)
+   integer(i4),allocatable :: interface(:), lattice(:),j_left(:),j_right(:)
+   integer(i4),allocatable :: interface_old(:), lattice_old(:)
 
    interface = init_interface(L)
    lattice = init_lattice(L,0.4_dp,0.5_dp)
@@ -18,9 +18,14 @@ program test_mc_step
    interface_old = interface
    lattice_old = lattice
 
+   allocate(j_left(L));allocate(j_right(L))
+   j_left =0;j_right =0
+
+
    particles_before = count(lattice /= 0)
 
-   call active_step(interface,lattice,L,.true.,0.5_dp,1.0_dp,0.1_dp,flips,hops,h_left,h_right,.true.,j_left,j_right)
+   call active_step(interface,lattice,L,.true.,0.5_dp,1.0_dp,0.1_dp,&
+   flips,hops,h_left,h_right,.false.,j_left,j_right)
 
    particles_after = count(lattice /= 0)
 
@@ -35,7 +40,7 @@ program test_mc_step
    end if
 
    ! ---------- TEST 3: interface jump only +-2 ----------
-   max_jump = maxval(int(abs(interface - interface_old),i4))
+   max_jump = maxval(abs(interface - interface_old))
    if (max_jump > 2) then
       stop "FAIL: interface jump too large"
    end if

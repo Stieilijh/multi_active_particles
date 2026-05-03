@@ -3,7 +3,7 @@ program test_observables
    use mod_observables
    implicit none
 
-   integer(i8), dimension(4) :: interface = [0, 2, 0, 2]
+   integer(i4), dimension(4) :: interface = [0, 2, 0, 2]
    integer(i4), dimension(6) :: lattice   = [1, -1, 0, 1, 0, -1]
 
    real(dp) :: mean, width, density, pf

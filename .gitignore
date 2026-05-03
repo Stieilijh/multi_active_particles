@@ -7,3 +7,5 @@ data/
 obj/
 bin/
 graphs/
+.venv/
+*.env

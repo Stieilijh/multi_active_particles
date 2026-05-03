@@ -97,13 +97,14 @@ tests/multi_particles/run_density_sweep.f90 \
 
 build_parallel_density_sweep:
 	mkdir -p obj bin
-	mpif90 -O3 -march=native -funroll-loops -J obj -I obj \
+	mpif90 -O3 -march=native -funroll-loops -cpp -J obj -I obj \
 src/common/mod_precision.f90 \
 src/common/mod_rng.f90 \
 src/common/mod_lattice.f90 \
 src/common/mod_interface.f90 \
 src/common/mod_mc_step.f90 \
 src/common/mod_observables.f90 \
+src/common/mod_filename.f90 \
 src/common/mod_hdf5.f90 \
 src/multi_particles/mod_time_avg.f90 \
 tests/multi_particles/run_parallel_density_sweep.f90 \
@@ -115,5 +116,13 @@ tests/multi_particles/run_parallel_density_sweep.f90 \
 
 run_parallel_density_sweep:
 	mpirun --oversubscribe -np 4 bin/run_parallel_density_sweep
+
+test_filename:
+	gfortran -O3 -Jobj -Iobj -cpp \
+	src/common/mod_precision.f90 \
+	src/common/mod_filename.f90 \
+	tests/test_filename.f90 \
+	-o bin/test_filename.out
+	
 clean:
 	rm -rf obj/*.mod obj/*.o

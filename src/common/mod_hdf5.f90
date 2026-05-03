@@ -99,8 +99,7 @@ contains
       call h5pset_chunk_f(dcpl,rank,chunk,error)
       call h5pset_deflate_f(dcpl,4,error)
 
-      ! 🔧 FIX: use 64-bit integer
-      call h5dcreate_f(parent,name,H5T_NATIVE_LLONG,space,dset,error,dcpl)
+      call h5dcreate_f(parent,name,H5T_NATIVE_INTEGER,space,dset,error,dcpl)
 
       call h5pclose_f(dcpl,error)
       call h5sclose_f(space,error)
@@ -185,8 +184,8 @@ contains
       volume_exclusion,puller_fraction)
 
       character(*),intent(in) :: filename
-      integer(i8),intent(in) :: L,run_id,n_samples,Lsize
-      integer(i8),intent(in) :: eq_steps,interval_steps
+      integer(i4),intent(in) :: L,run_id,n_samples,Lsize
+      integer(i4),intent(in) :: eq_steps,interval_steps
       real(dp),intent(in) :: density
       real(dp),intent(in) :: p_right,hopping_rate,flipping_rate,puller_fraction
       logical,intent(in) :: volume_exclusion
@@ -209,7 +208,7 @@ contains
       write(name,'("L_",I0)') L
       call open_or_create_group(file_id,name,group_L)
 
-      write(name,'("density_",F0.3)') density
+      write(name,'("density_",F6.3)') density
       call open_or_create_group(group_L,name,group_density)
 
       write(name,'("run_",I0)') run_id
@@ -249,6 +248,103 @@ contains
    end subroutine
 
 !========================================================
+! writing routines
+!========================================================
+
+   subroutine write_scalar_real(dset,i,value)
+      integer(hid_t),intent(in) :: dset
+      integer(i4),intent(in) :: i
+      real(dp),intent(in) :: value
+
+      integer :: error
+      integer(hid_t) :: filespace,memspace
+      integer(hsize_t) :: start(1),count(1)
+      real(dp) :: buf(1)
+
+      buf=[value]
+      start=[i-1]
+      count=[1]
+
+      call h5dget_space_f(dset,filespace,error)
+      call h5sselect_hyperslab_f(filespace,H5S_SELECT_SET_F,start,count,error)
+      call h5screate_simple_f(1,count,memspace,error)
+
+      call h5dwrite_f(dset,H5T_NATIVE_DOUBLE,buf,count,error, &
+         file_space_id=filespace,mem_space_id=memspace)
+
+      call h5sclose_f(filespace,error)
+      call h5sclose_f(memspace,error)
+   end subroutine
+
+   subroutine write_scalar_int(dset,i,value)
+      integer(hid_t),intent(in) :: dset
+      integer(i4),intent(in) :: i,value
+
+      integer :: error
+      integer(hid_t) :: filespace,memspace
+      integer(hsize_t) :: start(1),count(1)
+      integer(i4) :: buf(1)
+
+      buf=[value]
+      start=[i-1]
+      count=[1]
+
+      call h5dget_space_f(dset,filespace,error)
+      call h5sselect_hyperslab_f(filespace,H5S_SELECT_SET_F,start,count,error)
+      call h5screate_simple_f(1,count,memspace,error)
+
+      call h5dwrite_f(dset,H5T_NATIVE_INTEGER,buf,count,error, &
+         file_space_id=filespace,mem_space_id=memspace)
+
+      call h5sclose_f(filespace,error)
+      call h5sclose_f(memspace,error)
+   end subroutine
+
+   subroutine write_row(dset,i,row)
+      integer(hid_t),intent(in) :: dset
+      integer(i4),intent(in) :: i
+      integer(i4),intent(in) :: row(:)
+
+      integer :: error
+      integer(hid_t) :: filespace,memspace
+      integer(hsize_t) :: start(2),count(2)
+
+      start=[i-1,0]
+      count=[1,size(row)]
+
+      call h5dget_space_f(dset,filespace,error)
+      call h5sselect_hyperslab_f(filespace,H5S_SELECT_SET_F,start,count,error)
+      call h5screate_simple_f(2,count,memspace,error)
+
+      call h5dwrite_f(dset,H5T_NATIVE_INTEGER,row,count,error, &
+         file_space_id=filespace,mem_space_id=memspace)
+
+      call h5sclose_f(filespace,error)
+      call h5sclose_f(memspace,error)
+   end subroutine
+
+   subroutine hdf5_write_sample(i,mean,width,current, &
+      flips,hops_left,hops_right,interface,lattice,j_left,j_right)
+
+      integer(i4),intent(in)::i
+      real(dp),intent(in)::mean,width,current
+      integer(i4),intent(in)::flips,hops_left,hops_right
+      integer(i4),intent(in)::interface(:),lattice(:),j_left(:),j_right(:)
+
+      call write_scalar_real(d_mean,i,mean)
+      call write_scalar_real(d_width,i,width)
+      call write_scalar_real(d_current,i,current)
+
+      call write_scalar_int(d_flips,i,flips)
+      call write_scalar_int(d_hops_l,i,hops_left)
+      call write_scalar_int(d_hops_r,i,hops_right)
+
+      call write_row(d_interface,i,interface)
+      call write_row(d_lattice,i,lattice)
+      call write_row(d_j_left,i,j_left)
+      call write_row(d_j_right,i,j_right)
+
+   end subroutine
 
    subroutine hdf5_close()
 
@@ -263,7 +359,7 @@ contains
       call h5dclose_f(d_interface,error)
       call h5dclose_f(d_lattice,error)
       call h5dclose_f(d_j_left,error)
-      call h5dclose_f(d_j_right,error)
+      call h5dclose_f(d_J_right,error)
 
       call h5gclose_f(group_run,error)
       call h5gclose_f(group_density,error)

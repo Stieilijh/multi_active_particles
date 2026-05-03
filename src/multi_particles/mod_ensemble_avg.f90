@@ -20,25 +20,21 @@ contains
       real(dp),intent(in)::hopping_rate,flipping_rate
       character(len=*),intent(in)::filename
 
-      integer(i4),allocatable :: lattice(:)
-      integer(i8),allocatable :: interface(:)
-
-      integer(i8)::flips,hops,hops_left,hops_right
+      integer(i4),allocatable :: lattice(:), interface(:)
+      integer(i4)::flips,hops,hops_left,hops_right
       integer(i4)::run,i
-
+!sampling and current hardcoded to false
+      integer(i4)::j_left(L),j_right(L)
       real(dp)::mean_h,width,current
-
-      ! dummy arrays (needed for active_step signature)
-      integer(i8),allocatable :: j_left(:), j_right(:)
-      allocate(j_left(L), j_right(L))
-      j_left = 0_i8
-      j_right = 0_i8
-
+      j_left =0
+      j_right=0
       do run = 1 , num_runs
+
 
          lattice   = init_lattice(L,density,puller_fraction)
          interface = init_interface(L)
 
+         ! bring to steady state
          do i = 1 , eq_steps
             call active_step(interface,lattice,L,&
                volume_exclusion,p_right,hopping_rate,flipping_rate,&
@@ -49,7 +45,7 @@ contains
             eq_steps, 0, &
             p_right, hopping_rate, flipping_rate, &
             volume_exclusion, puller_fraction)
-
+         ! measure once
          mean_h = get_mean_height(interface)
          width  = get_width(interface)
          current= get_inst_current(hops_left,hops_right,L)

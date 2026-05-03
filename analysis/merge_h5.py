@@ -2,8 +2,8 @@ import h5py
 import glob
 import os
 
-INPUT_DIR = "data/multi_particles/volume_exclusion/puller_fraction_1_0/hop_1_flip_0_1/L_1024/dens"
-OUTPUT = "data/multi_particles/volume_exclusion/puller_fraction_1_0/hop_1_flip_0_1/L_1024/L_1024_flip_0_1.h5"
+INPUT_DIR = os.environ.get("INPUT_DIR")
+OUTPUT = os.environ.get("OUTPUT")
 
 files = sorted(glob.glob(os.path.join(INPUT_DIR, "*.h5")))
 

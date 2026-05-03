@@ -7,7 +7,7 @@ program run_density_sweep
 
    ! -------- simulation parameters --------
    integer(i4), parameter :: nL = 1
-   integer(i4), dimension(nL) :: L_list = [128]
+   integer(i4), dimension(nL) :: L_list = [64]
 
    integer(i4), parameter :: ndens = 20
    real(dp) :: densities(ndens)

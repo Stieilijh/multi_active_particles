@@ -1,8 +1,12 @@
 import h5py
 import numpy as np
+import os
+FILE = os.environ.get("FILE")
 
-FILE = "data/multi_particles/volume_exclusion/puller_fraction_1_0/hop_1_flip_0_1/L_1024/L_1024_flip_0_1.h5"
+if FILE is None:
+    raise ValueError("FILE environment variable not set")
 
+print(f"Rewriting file: {FILE}")
 with h5py.File(FILE, "r+") as f:
 
     for L_key in f.keys():

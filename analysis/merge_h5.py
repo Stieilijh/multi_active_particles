@@ -4,13 +4,13 @@ import os
 
 INPUT_DIR = os.environ.get("INPUT_DIR")
 OUTPUT = os.environ.get("OUTPUT")
-
+if INPUT_DIR is None or OUTPUT is None:
+    raise ValueError("INPUT_DIR or OUTPUT environment variable not set")
 files = sorted(glob.glob(os.path.join(INPUT_DIR, "*.h5")))
 
 with h5py.File(OUTPUT, "w") as fout:
 
     for f in files:
-        print("Merging", f)
 
         with h5py.File(f, "r") as fin:
 

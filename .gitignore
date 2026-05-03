@@ -9,3 +9,5 @@ bin/
 graphs/
 .venv/
 *.env
+logs/
+*.log

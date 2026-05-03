@@ -16,43 +16,40 @@ def get_L_value(L):
     return int(L.split("_")[1])
 
 
-@njit
-def smooth_interface(interface):
-    L = len(interface)
-    smooth = np.zeros(L)
-    for i in range(L):
-        smooth[i] = (interface[(i-1)%L] + interface[i] + interface[(i+1)%L]) / 3.0
-    return smooth
-
 
 @njit
 def get_well_depths_numba(interface):
     L = len(interface)
-    smooth = smooth_interface(interface)
     depths = []
 
     for i in range(L):
         left = (i - 1) % L
         right = (i + 1) % L
 
-        if not (smooth[i] < smooth[left] and smooth[i] < smooth[right]):
+        # check local minimum (valley)
+        if not (interface[i] < interface[left] and interface[i] < interface[right]):
             continue
 
+        # find left peak
         j = left
-        while not (smooth[j] > smooth[(j-1)%L] and smooth[j] > smooth[(j+1)%L]):
+        while not (interface[j] > interface[(j-1)%L] and interface[j] > interface[(j+1)%L]):
             j = (j - 1) % L
-        left_peak = smooth[j]
+        left_peak = interface[j]
 
+        # find right peak
         j = right
-        while not (smooth[j] > smooth[(j-1)%L] and smooth[j] > smooth[(j+1)%L]):
+        while not (interface[j] > interface[(j-1)%L] and interface[j] > interface[(j+1)%L]):
             j = (j + 1) % L
-        right_peak = smooth[j]
+        right_peak = interface[j]
 
-        depth = int(round(min(left_peak, right_peak) - smooth[i]))
-        if depth >= 2:
+        # well depth = min(peak heights) - valley
+        depth = int(round(min(left_peak, right_peak) - interface[i]))
+
+        # ✅ include even depth = 1
+        if depth >= 1:
             depths.append(depth)
 
-    return depths, smooth
+    return depths
 
 
 def process_config(config):
@@ -106,6 +103,8 @@ with h5py.File(FILE, "r+") as f:
         J_right_avg = []
         slopes_per_density = []
         height_per_flip_all = []
+        width_fluct_all = []
+        current_fluct_all = []
 
         densities_keys = [
             k for k in f[L].keys()
@@ -130,9 +129,8 @@ with h5py.File(FILE, "r+") as f:
             J_right_runs = []
 
             interval_steps = None
-
-            # 🔴 NEW: collect smooth for ALL samples
-            smooth_all = []
+            width_fluct_runs = []
+            current_fluct_runs = []
 
             for run_key in f[L][density].keys():
                 if not run_key.startswith("run"):
@@ -147,8 +145,9 @@ with h5py.File(FILE, "r+") as f:
                 flips_arr = run["flips"][:]
                 hopsL_arr = run["hops_left"][:]
                 hopsR_arr = run["hops_right"][:]
-
-                width_runs.append(np.mean(width_arr))
+                width_rm = running_mean(width_arr)
+                steady_width = width_rm[-1]
+                width_runs.append(steady_width)
                 flips_runs.append(np.mean(flips_arr))
                 hopsL_runs.append(np.mean(hopsL_arr))
                 hopsR_runs.append(np.mean(hopsR_arr))
@@ -158,13 +157,13 @@ with h5py.File(FILE, "r+") as f:
                 window = max(10, int(0.2 * n_samples))
 
                 width_ma = moving_avg(width_arr, window)
-                width_rm = running_mean(width_arr)
 
-                width_mean_val = np.mean(width_arr)
                 width_rel_fluct = (
-                    np.std(width_arr) / width_mean_val
-                    if width_mean_val != 0 else np.nan
-                )
+                    np.std(width_arr) / np.mean(width_arr)
+                    if  steady_width > 1e-12 else np.nan
+                )                
+                width_fluct_runs.append(width_rel_fluct)
+
 
                 if "width_moving_avg" in run:
                     del run["width_moving_avg"]
@@ -174,7 +173,6 @@ with h5py.File(FILE, "r+") as f:
                     del run["width_running_mean"]
                 run.create_dataset("width_running_mean", data=width_rm)
 
-                run.attrs["width_rel_fluct"] = width_rel_fluct
 
                 if "current" in run:
                     current_arr = run["current"][:]
@@ -183,10 +181,12 @@ with h5py.File(FILE, "r+") as f:
                     current_rm = running_mean(current_arr)
 
                     current_mean_val = np.mean(current_arr)
+                    den = np.sqrt(np.mean(current_arr**2))
                     current_rel_fluct = (
-                        np.std(current_arr) / current_mean_val
-                        if current_mean_val != 0 else np.nan
+                        np.std(current_arr) / den
+                        if den > 1e-12 else np.nan
                     )
+                    current_fluct_runs.append(current_rel_fluct)
 
                     if "current_moving_avg" in run:
                         del run["current_moving_avg"]
@@ -196,7 +196,7 @@ with h5py.File(FILE, "r+") as f:
                         del run["current_running_mean"]
                     run.create_dataset("current_running_mean", data=current_rm)
 
-                    run.attrs["current_rel_fluct"] = current_rel_fluct
+                
 
                 # ===== CLUSTERS =====
                 if "lattice" in run:
@@ -218,9 +218,9 @@ with h5py.File(FILE, "r+") as f:
                     configs = [data[:, t].copy() for t in range(data.shape[1])]
                     results = pool.map(process_config, configs)
 
-                    for depths, smooth in results:
+                    for depths in results:
                         all_wells.extend(depths)
-                        smooth_all.append(smooth)
+                        
 
                 mean_height_runs.append(run["mean"][:])
 
@@ -228,19 +228,16 @@ with h5py.File(FILE, "r+") as f:
                     J_left_runs.append(np.mean(run["J (Left)"][:]))
                 if "J (Right)" in run:
                     J_right_runs.append(np.mean(run["J (Right)"][:]))
-
-            # ===== SAVE SMOOTHED INTERFACE =====
+# outisde the run loop
             d_group = f[L][density]
 
-            if len(smooth_all) > 0:
-                smooth_arr = np.array(smooth_all)  # (samples, L)
-                smooth_arr = smooth_arr.T          # (L, samples)
+            width_fluct_all.append(
+                np.nanmean(width_fluct_runs) if width_fluct_runs else np.nan
+            )
 
-                if "smoothed_interface" in d_group:
-                    del d_group["smoothed_interface"]
-
-                d_group.create_dataset("smoothed_interface", data=smooth_arr)
-
+            current_fluct_all.append(
+                np.nanmean(current_fluct_runs) if current_fluct_runs else np.nan
+            )
             # ===== SAVE PDFs =====
             if len(all_clusters) > 0:
                 sizes, counts = np.unique(all_clusters, return_counts=True)
@@ -318,6 +315,8 @@ with h5py.File(FILE, "r+") as f:
         sweep.create_dataset("J_right", data=np.array(J_right_avg))
         sweep.create_dataset("slope_of_mean_height_vs_density", data=np.array(slopes_per_density))
         sweep.create_dataset("height_change_per_flip", data=np.array(height_per_flip_all))
+        sweep.create_dataset("width_fluct", data=np.array(width_fluct_all))
+        sweep.create_dataset("current_fluct", data=np.array(current_fluct_all))
 
         print(f"Saved density sweep for {L}")
 

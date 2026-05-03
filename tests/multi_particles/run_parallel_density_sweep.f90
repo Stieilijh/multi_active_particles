@@ -11,7 +11,7 @@ program run_parallel_density_sweep
 
    ! -------- simulation parameters --------
    integer(i4), parameter :: nL = 1!5
-   integer(i4), dimension(nL) :: L_list = [64]
+   integer(i4), dimension(nL) :: L_list = [128]
    !integer(i4), dimension(nL) :: L_list = [128,256,512,1024,2048]
 
    integer(i4), parameter :: ndens = 20

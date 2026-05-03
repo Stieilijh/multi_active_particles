@@ -123,6 +123,10 @@ test_filename:
 	src/common/mod_filename.f90 \
 	tests/test_filename.f90 \
 	-o bin/test_filename.out
-	
+
+analyse_and_log:
+	mkdir -p logs
+	python3 analysis/master.py 2>&1 | tee logs/pipeline_$$(date +%F_%H-%M-%S).log
+
 clean:
 	rm -rf obj/*.mod obj/*.o

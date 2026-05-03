@@ -5,7 +5,9 @@ import os
 
 FILE = os.environ.get("FILE", "default_path_here")
 
-
+if FILE is None:
+    raise ValueError("FILE environment variable not set")
+    
 def get_density_value(d):
     return float(d.split("_")[1])
 
